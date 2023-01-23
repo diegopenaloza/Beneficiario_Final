@@ -101,9 +101,19 @@ len(proveedores["RUC"].unique())
 
 # +
 # base_directorio=proveedores
+
+# +
+# df = pd.read_excel("directorio_companias.xlsx", skiprows=4)
+
+# +
+# %%time
+# base_directorio=pd.read_csv("data/companias/companiasactivas.csv",converters={'RUC': str})
+url_excel_companis='https://mercadodevalores.supercias.gob.ec/reportes/excel/directorio_companias.xlsx'
+r = requests.get(url_excel_companis)
+
+base_directorio= pd.read_excel(r.content, skiprows=4,converters={'RUC': str})
 # -
 
-base_directorio=pd.read_csv("companiasactivas.csv",converters={'RUC': str})
 base_directorio["RUC"]=base_directorio["RUC"].astype(str)
 base_directorio["RUC"]=base_directorio["RUC"].apply(lambda x: str(x).split('.')[0])
 base_directorio["EXPEDIENTE"]=base_directorio["EXPEDIENTE"].apply(lambda x: str(x).split('.')[0])
