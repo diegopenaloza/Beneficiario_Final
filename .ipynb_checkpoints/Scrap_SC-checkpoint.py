@@ -198,10 +198,11 @@ try:
 except:
     base_errors=pd.DataFrame({"errores":[]})
     pass
+
+
+# +
+# len(base_data[f"{find_by}_empresa"].unique())
 # -
-
-
-len(base_data[f"{find_by}_empresa"].unique())
 
 # Selecionamos las copañias que no se pudieron analizar por errores  
 # y le sumamos la base con las compañias nuavas por analizar 
@@ -251,7 +252,9 @@ except:
     list_companies=sin_repetir
     pass
 
-len(list_companies)
+# +
+# len(list_companies)
+# -
 
 if len(list_companies)==0:
         # Comparamos Si existe el Ruc en la Base de Compañias 
@@ -267,7 +270,9 @@ if len(list_companies)==0:
         find_df(i)
     list_companies=not_scrap
 
-len(list_companies)
+# +
+# len(list_companies)
+# -
 
 async def run(playwright,list_companies):
     # Si todas las empresas de la lista  ya han sido analizadas no se ejecuta el codigo 
@@ -481,9 +486,9 @@ def review(lista,df_list):
 
 # +
 # len(review(list_companies,base_data[f"{find_by}_empresa"])[0])
-# -
 
-len(review(base_directorio["RUC"],base_data[f"{find_by}_empresa"])[1])
+# +
+# len(review(base_directorio["RUC"],base_data[f"{find_by}_empresa"])[1])
 
 # +
 # len(base_data[base_data[f"{find_by}_empresa"].isin(base_directorio["RUC"].unique())]["RUC_empresa"].unique())
