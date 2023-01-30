@@ -127,6 +127,7 @@ base_directorio_T= base_directorio.drop_duplicates(subset="RUC")
 # +
 # Comparamos Si existe el Ruc en la Base de Compañias 
 in_compani=[]
+
 def find_df(x):
     if base_directorio_T["RUC"].isin([x]).any():
         in_compani.append(x)
@@ -143,6 +144,8 @@ for i in proveedores["RUC"].unique():
 # Guardamos los Rucs que si constan en la base de compañias
 base_directorio=pd.DataFrame({"RUC":in_compani})
 
+# Test 5 procesos
+base_directorio=base_directorio[0:5]
 base_directorio
 
 # +
@@ -170,27 +173,17 @@ ubi_save_errors=os.path.join(folder_save, "data_errors.pkl")
 ##### Analisis por lotes
 # Establecemos el numero de compañias que se analizaran cada vez que se ejecute el código
 n_reviews=250
-# -
-
-
-# Conectamos con MySQL
-name_data_base_sql="test_sql"
-usuario="root"
-contrasena=""
-host="127.0.0.1"
-table_name="data_accionistas"
-engine = create_engine(f'mysql+mysqlconnector://{usuario}:{contrasena}@{host}/{name_data_base_sql}')
 
 
 # +
-# df = pd.DataFrame({'id': [1, 2, 3], 'nombre': ['Juan', 'Maria', 'Pedro']})
+# Conectamos con MySQL
+# name_data_base_sql="test_sql"
+# usuario="root"
+# contrasena=""
+# host="127.0.0.1"
+# table_name="data_accionistas"
+# engine = create_engine(f'mysql+mysqlconnector://{usuario}:{contrasena}@{host}/{name_data_base_sql}')
 
-# df.to_sql(table_name, engine, if_exists='replace', index=False)
-
-
-# base_data = pd.read_sql_table(table_name, engine, index_col=None)
-
-# base_data 
 
 # +
 # Cargamos las bases de datos y los errores (si no se tienen no se carga)
@@ -221,10 +214,11 @@ try:
 except:
     base_errors=pd.DataFrame({"errores":[]})
     pass
+
+
+# +
+# len(base_data[f"{find_by}_empresa"].unique())
 # -
-
-
-len(base_data[f"{find_by}_empresa"].unique())
 
 # Selecionamos las copañias que no se pudieron analizar por errores  
 # y le sumamos la base con las compañias nuavas por analizar 
@@ -274,7 +268,9 @@ except:
     list_companies=sin_repetir
     pass
 
-len(list_companies)
+# +
+# len(list_companies)
+# -
 
 if len(list_companies)==0:
         # Comparamos Si existe el Ruc en la Base de Compañias 
@@ -290,7 +286,25 @@ if len(list_companies)==0:
         find_df(i)
     list_companies=not_scrap
 
-len(list_companies)
+
+# +
+# len(list_companies)
+# -
+
+def review(lista,df_list):
+    in_base_directori=[]
+    no_in_directori=[]
+    # Filtramos las empresas que ya han sido analizadas 
+    def find_df(x):
+        if df_list.isin([x]).any():
+            in_base_directori.append(x)
+        else:
+            no_in_directori.append(x)
+
+    for i in lista:
+        find_df(i)
+    return in_base_directori,no_in_directori
+
 
 async def run(playwright,list_companies):
     # Si todas las empresas de la lista  ya han sido analizadas no se ejecuta el codigo 
@@ -306,7 +320,7 @@ async def run(playwright,list_companies):
     # almacenamos el ruc de la compañias con errores
     errors=[]
     # Usamos el buscador por defecto
-    browser = await playwright.chromium.launch(headless=True)
+    browser = await playwright.chromium.launch(headless=False)
     page = await browser.new_page()
     # Cargamos la pagina por analizar
     await page.goto(linkpaht)
@@ -434,16 +448,21 @@ async def run(playwright,list_companies):
             # Agregamos el ruc de la compañia a cada accinista
             df[f"{find_by}_empresa"]=company
             df_accionistas.append(df)
+            print(df)
             try :
                 base_data = pd.read_sql_table(table_name, engine, index_col=None)
-                base_data[f"{find_by}_empresa"]=base_data[f"{find_by}_empresa"].astype(str)
-                base_data[f"{find_by}_empresa"]=base_data[f"{find_by}_empresa"].apply(lambda x: "0" + x if len(x) == 12 else x )
-                concat_df_shrs = pd.concat([base_data,df])
-                concat_df_shrs[f"{find_by}_empresa"]=concat_df_shrs[f"{find_by}_empresa"].astype(str)
-                # concat_df_shrs.to_csv(ubi_save, index=False)
-                concat_df_shrs.to_sql(table_name, engine, if_exists='replace', index=False)
+                # base_data[f"{find_by}_empresa"]=base_data[f"{find_by}_empresa"].astype(str)
+                # base_data[f"{find_by}_empresa"]=base_data[f"{find_by}_empresa"].apply(lambda x: "0" + x if len(x) == 12 else x )
+                # concat_df_shrs = pd.concat([base_data,df])
+                # concat_df_shrs[f"{find_by}_empresa"]=concat_df_shrs[f"{find_by}_empresa"].astype(str)
+                # # concat_df_shrs.to_csv(ubi_save, index=False)
+                # concat_df_shrs.to_sql(table_name, engine, if_exists='replace', index=False)
+            
             except:
-                df.to_sql(table_name, engine, if_exists='replace', index=False)
+               
+                # df.to_sql(table_name, engine, if_exists='replace', index=False)
+                 pass
+                 
         
             # De la base de datos que ya se encuentra extrayeron los datos, buscamos la ultima compañia analizada 
             # regresamos a la pantalla inicial para analizar otra compañia
@@ -464,16 +483,67 @@ async def run(playwright,list_companies):
     # Data frame de errores
     errors_df=pd.DataFrame({"errores":errors})
     # Guardamos los errores
-    errors_df.to_pickle(ubi_save_errors) 
+    # errors_df.to_pickle(ubi_save_errors) 
     print("Numero de Errores: ", len(errors_df))
     # Cerramos el buscador 
     await browser.close()
-    return 
+    return errors_df,df_accionistas
 
 async def main():
     async with async_playwright() as playwright:
-        await run(playwright,list_companies)
-asyncio.run(main())
+       capture_ok_error,df_scrpa= await run(playwright,list_companies)
+    return capture_ok_error,df_scrpa
+error,df_scrap=asyncio.run(main())
+
+df_lista=[df_scrap]
+
+print("Errores",error)
+
+while len(error)>0:
+    async def main():
+        async with async_playwright() as playwright:
+           capture_ok_error,df_scrpa= await run(playwright,list(error["errores"]))
+        return capture_ok_error,df_scrpa
+    error,df_scrap=asyncio.run(main())
+    df_lista.append(df_scrap)
+
+concat_df_shrs = pd.concat(df_lista)
+
+print(concat_df_shrs)
+
+# +
+# base_data=concat_df_shrs 
+
+# +
+# base_data["Identificación"]=base_data["Identificación"].apply(lambda x: "0" + x if len(x) == 12 else x )
+# base_data_compani=base_data[(base_data["Identificación"].apply(lambda x: len(x) > 11) )&
+#           (base_data["NacionalidadFilter by Nacionalidad"]=="ECUADOR")]
+# in_companis=review(base_data_compani["Identificación"].unique(),base_directorio_T["RUC"])[0]
+# # print("Compañias que son accionistas: ",len(in_companis))
+# to_scrap=review(in_companis,base_data[f'{find_by}_empresa'])[1]
+# print("A Scrap: ",len(to_scrap))
+
+# async def main():
+#     async with async_playwright() as playwright:
+#        capture_ok_error,df_scrpa= await run(playwright,list_companies)
+#     return capture_ok_error,df_scrpa
+# error,df_scrap=asyncio.run(main())
+
+# df_lista=[df_scrap]
+
+# while len(error)>0:
+#     async def main():
+#         async with async_playwright() as playwright:
+#            capture_ok_error,df_scrpa= await run(playwright,list(error["errores"]))
+#         return capture_ok_error,df_scrpa
+#     error,df_scrap=asyncio.run(main())
+#     df_lista.append(df_scrap)
+
+# +
+# concat_df_shrs = pd.concat(df_lista)
+
+# +
+# print(concat_df_shrs )
 
 # +
 fin = time.perf_counter()
@@ -484,23 +554,8 @@ tiempo_ejecucion_min=tiempo_ejecucion/60
 
 # Muestra el tiempo de ejecución en segundos
 print(f'Tiempo de ejecución: {tiempo_ejecucion_min:.2f} minutos')
-
-
 # -
 
-def review(lista,df_list):
-    in_base_directori=[]
-    no_in_directori=[]
-    # Filtramos las empresas que ya han sido analizadas 
-    def find_df(x):
-        if df_list.isin([x]).any():
-            in_base_directori.append(x)
-        else:
-            no_in_directori.append(x)
-
-    for i in lista:
-        find_df(i)
-    return in_base_directori,no_in_directori
 
 
 # +
@@ -514,20 +569,20 @@ def review(lista,df_list):
 
 # +
 # len(base_data[base_data[f"{find_by}_empresa"].isin(base_directorio["RUC"].unique())]["RUC_empresa"].unique())
-# -
 
-if len(base_data[f"{find_by}_empresa"].unique())>len(base_directorio["RUC"].unique()):
-    base_data["Identificación"]=base_data["Identificación"].apply(lambda x: "0" + x if len(x) == 12 else x )
-    base_data_compani=base_data[(base_data["Identificación"].apply(lambda x: len(x) > 11) )&
-              (base_data["NacionalidadFilter by Nacionalidad"]=="ECUADOR")]
-    in_companis=review(base_data_compani["Identificación"].unique(),base_directorio_T["RUC"])[0]
-    # print("Compañias que son accionistas: ",len(in_companis))
-    to_scrap=review(in_companis,base_data[f'{find_by}_empresa'])[1]
-    print("A Scrap: ",len(to_scrap))
-    async def main():
-        async with async_playwright() as playwright:
-            await run(playwright,to_scrap)
-    asyncio.run(main())
+# +
+# if len(base_data[f"{find_by}_empresa"].unique())>len(base_directorio["RUC"].unique()):
+#     base_data["Identificación"]=base_data["Identificación"].apply(lambda x: "0" + x if len(x) == 12 else x )
+#     base_data_compani=base_data[(base_data["Identificación"].apply(lambda x: len(x) > 11) )&
+#               (base_data["NacionalidadFilter by Nacionalidad"]=="ECUADOR")]
+#     in_companis=review(base_data_compani["Identificación"].unique(),base_directorio_T["RUC"])[0]
+#     # print("Compañias que son accionistas: ",len(in_companis))
+#     to_scrap=review(in_companis,base_data[f'{find_by}_empresa'])[1]
+#     print("A Scrap: ",len(to_scrap))
+#     async def main():
+#         async with async_playwright() as playwright:
+#             await run(playwright,to_scrap)
+#     asyncio.run(main())
 
 
 # +
