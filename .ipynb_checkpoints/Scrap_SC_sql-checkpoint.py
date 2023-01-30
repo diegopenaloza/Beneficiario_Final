@@ -399,6 +399,8 @@ async def run(playwright,list_companies):
             #######################
             time.sleep(2)
             # Accedemos al menu de Accionistas
+            
+            
             await page.locator("a[id='frmMenu:menuAccionistas']").click()
             time.sleep(2)
             # Analisis del captcha de la ventana de Accinistas
@@ -497,7 +499,7 @@ error,df_scrap=asyncio.run(main())
 
 df_lista=[df_scrap]
 
-print("Errores",error)
+print("Corrigiendo Errores",error)
 
 while len(error)>0:
     async def main():
@@ -507,9 +509,19 @@ while len(error)>0:
     error,df_scrap=asyncio.run(main())
     df_lista.append(df_scrap)
 
-concat_df_shrs = pd.concat(df_lista)
+# +
+# print("Print Lista Completa")
+# print(df_lista)
 
-print(concat_df_shrs)
+# +
+# concat_df_shrs = pd.concat(df_lista)
+
+# +
+# print("Print Concat")
+# print(concat_df_shrs)
+
+# +
+# print(concat_df_shrs)
 
 # +
 # base_data=concat_df_shrs 
