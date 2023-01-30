@@ -144,6 +144,8 @@ for i in proveedores["RUC"].unique():
 # Guardamos los Rucs que si constan en la base de compañias
 base_directorio=pd.DataFrame({"RUC":in_compani})
 
+# Test 5 procesos
+base_directorio=base_directorio[0:5]
 base_directorio
 
 # +
@@ -171,27 +173,17 @@ ubi_save_errors=os.path.join(folder_save, "data_errors.pkl")
 ##### Analisis por lotes
 # Establecemos el numero de compañias que se analizaran cada vez que se ejecute el código
 n_reviews=250
-# -
-
-
-# Conectamos con MySQL
-name_data_base_sql="test_sql"
-usuario="root"
-contrasena=""
-host="127.0.0.1"
-table_name="data_accionistas"
-engine = create_engine(f'mysql+mysqlconnector://{usuario}:{contrasena}@{host}/{name_data_base_sql}')
 
 
 # +
-# df = pd.DataFrame({'id': [1, 2, 3], 'nombre': ['Juan', 'Maria', 'Pedro']})
+# Conectamos con MySQL
+# name_data_base_sql="test_sql"
+# usuario="root"
+# contrasena=""
+# host="127.0.0.1"
+# table_name="data_accionistas"
+# engine = create_engine(f'mysql+mysqlconnector://{usuario}:{contrasena}@{host}/{name_data_base_sql}')
 
-# df.to_sql(table_name, engine, if_exists='replace', index=False)
-
-
-# base_data = pd.read_sql_table(table_name, engine, index_col=None)
-
-# base_data 
 
 # +
 # Cargamos las bases de datos y los errores (si no se tienen no se carga)
@@ -222,10 +214,11 @@ try:
 except:
     base_errors=pd.DataFrame({"errores":[]})
     pass
+
+
+# +
+# len(base_data[f"{find_by}_empresa"].unique())
 # -
-
-
-len(base_data[f"{find_by}_empresa"].unique())
 
 # Selecionamos las copañias que no se pudieron analizar por errores  
 # y le sumamos la base con las compañias nuavas por analizar 
@@ -275,7 +268,9 @@ except:
     list_companies=sin_repetir
     pass
 
-len(list_companies)
+# +
+# len(list_companies)
+# -
 
 if len(list_companies)==0:
         # Comparamos Si existe el Ruc en la Base de Compañias 
@@ -291,7 +286,9 @@ if len(list_companies)==0:
         find_df(i)
     list_companies=not_scrap
 
-len(list_companies)
+# +
+# len(list_companies)
+# -
 
 async def run(playwright,list_companies):
     # Si todas las empresas de la lista  ya han sido analizadas no se ejecuta el codigo 
