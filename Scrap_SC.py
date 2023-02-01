@@ -44,11 +44,16 @@ def optain_data(path="Today"):
         
     # Si el argumento path es igual a "Today", descargamos los datos del mes actual en formato JSON a través de una solicitud HTTP
     
-        current_month_n=date.today().month
-        current_year_n=date.today().year
+        # current_month_n=date.today().month
+        current_month_n="0"
+        # current_year_n=date.today().year
+        current_year_n="2020"
+        
         urljson=f'https://datosabiertos.compraspublicas.gob.ec/PLATAFORMA/download?type=json&year={current_year_n}&month={current_month_n}&method=all'
+        print(urljson)
         urlj=urljson
         rj= requests.get(urlj)
+        print(rj)
         zj = zipfile.ZipFile(io.BytesIO(rj.content))
         name_json=zj.namelist()[0]
         data = json.load(zj.open(name_json))   
@@ -94,10 +99,11 @@ proveedores.head(2)
 # proveedores=proveedores.rename(columns={"ruc":"RUC"})
 # -
 
+proveedores["RUC"]=proveedores["RUC"].astype(str)
 proveedores["RUC"]=proveedores["RUC"].apply(lambda x: x+"001" if x[-3:] != "001" else x )
 proveedores["RUC"]=proveedores["RUC"].apply(lambda x: "0" + x if len(x) == 12 else x )
 
-len(proveedores["RUC"].unique())
+
 
 # +
 # base_directorio=proveedores
